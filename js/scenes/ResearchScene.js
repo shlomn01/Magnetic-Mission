@@ -232,12 +232,12 @@ class ResearchScene extends Phaser.Scene {
             earthGfx.strokeCircle(cx, cy, layers[i].r);
         }
 
-        // Instruction text
+        // Instruction text (above diagram)
         var instrText = this.add.text(cx, 82, t('res_layers_instruction') || 'Click each layer to learn about it', {
             fontFamily: this.fontFamily + ', monospace',
-            fontSize: '12px', color: '#ffec27',
+            fontSize: '11px', color: '#ffec27',
             stroke: '#000000', strokeThickness: 3,
-            wordWrap: { width: 700, useAdvancedWrap: true },
+            wordWrap: { width: 380, useAdvancedWrap: true },
             align: 'center', rtl: this.isRTL
         }).setOrigin(0.5).setDepth(11);
         this.stationGroup.push(instrText);
@@ -260,49 +260,51 @@ class ResearchScene extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(11).setVisible(false);
         this.stationGroup.push(this.layerCompleteMsg);
 
-        // Layer labels + click zones
-        var labelPositions = [
-            { x: cx, y: cy, key: 'inner_core' },           // center
-            { x: cx + R * 0.32, y: cy - R * 0.1, key: 'outer_core' },
-            { x: cx + R * 0.58, y: cy + R * 0.2, key: 'mantle' },
-            { x: cx - R * 0.1, y: cy - R * 0.85, key: 'crust' }
-        ];
+        // Info panel below Earth diagram (shows layer name + desc on click)
+        var infoPanelY = cy + R + 14;
+        var infoPanelGfx = this.add.graphics().setDepth(11);
+        infoPanelGfx.fillStyle(0x0d1b2a, 0.9);
+        infoPanelGfx.fillRoundedRect(cx - 145, infoPanelY - 4, 290, 46, 5);
+        infoPanelGfx.lineStyle(1, 0x53d8fb, 0.3);
+        infoPanelGfx.strokeRoundedRect(cx - 145, infoPanelY - 4, 290, 46, 5);
+        this.stationGroup.push(infoPanelGfx);
+
+        var infoText = this.add.text(cx, infoPanelY + 18, t('res_layers_instruction') || 'Click each layer to learn about it', {
+            fontFamily: this.fontFamily + ', monospace',
+            fontSize: '10px', color: '#c2c3c7',
+            stroke: '#000000', strokeThickness: 2,
+            wordWrap: { width: 280, useAdvancedWrap: true },
+            align: 'center', rtl: this.isRTL
+        }).setOrigin(0.5).setDepth(12);
+        this.stationGroup.push(infoText);
+
+        // Layer click zones (rings on the diagram, no floating labels)
+        var layerDescs = {
+            inner_core: t('earth_inner_core_desc') || 'Solid iron ball. Its growth drives convection.',
+            outer_core: t('earth_outer_core_desc') || 'Liquid iron! Convection here generates the magnetic field.',
+            mantle: t('earth_mantle_desc') || 'Slowly flowing rock. Transfers heat from core to surface.',
+            crust: t('earth_crust_desc') || 'The thin rocky shell we live on. 0-70 km deep.'
+        };
 
         layers.forEach(function(layer, li) {
-            var lp = labelPositions[li];
-
-            // Clickable zone
-            var zone = self.add.zone(lp.x, lp.y, layer.r * 0.6 + 30, layer.r * 0.6 + 30)
-                .setInteractive({ useHandCursor: true }).setDepth(12);
+            // Clickable zone centered on each ring
+            var zoneSize = Math.max(layer.r * 0.5, 44);
+            var zone = self.add.zone(cx, cy, zoneSize, zoneSize)
+                .setInteractive({ useHandCursor: true }).setDepth(12 + li);
             self.stationGroup.push(zone);
-
-            // Label
-            var lbl = self.add.text(lp.x, lp.y + (li === 3 ? 0 : 15), layer.label, {
-                fontFamily: self.fontFamily + ', monospace',
-                fontSize: '10px',
-                color: '#fff1e8',
-                stroke: '#000000',
-                strokeThickness: 3,
-                wordWrap: { width: 200, useAdvancedWrap: true },
-                align: 'center', rtl: self.isRTL
-            }).setOrigin(0.5).setDepth(12);
-            self.stationGroup.push(lbl);
-
-            // Check mark (hidden initially)
-            var check = self.add.text(lp.x + 20, lp.y - 5, '✓', {
-                fontFamily: 'monospace', fontSize: '14px', color: '#00e436'
-            }).setOrigin(0.5).setDepth(12).setVisible(false);
-            self.stationGroup.push(check);
 
             zone.on('pointerdown', function() {
                 if (self.exploredLayers[layer.key]) return;
                 self.exploredLayers[layer.key] = true;
-                check.setVisible(true);
                 if (window.AudioManager) window.AudioManager.playSFX('click');
 
-                // Highlight ring
+                // Highlight ring green
                 earthGfx.lineStyle(2, 0x00e436, 0.8);
                 earthGfx.strokeCircle(cx, cy, layer.r);
+
+                // Update info panel with layer name + description
+                infoText.setText(layer.label + '\n' + layerDescs[layer.key]);
+                infoText.setColor('#fff1e8');
 
                 // Quest
                 if (window.QuestSystem) {
@@ -312,12 +314,6 @@ class ResearchScene extends Phaser.Scene {
                 }
 
                 // Dr. Geo speaks about this layer
-                var layerDescs = {
-                    inner_core: t('earth_inner_core_desc') || 'Solid iron ball. Its growth drives convection.',
-                    outer_core: t('earth_outer_core_desc') || 'Liquid iron! Convection here generates the magnetic field.',
-                    mantle: t('earth_mantle_desc') || 'Slowly flowing rock. Transfers heat from core to surface.',
-                    crust: t('earth_crust_desc') || 'The thin rocky shell we live on. 0-70 km deep.'
-                };
                 self.showTypewriterDialog('geo', layerDescs[layer.key]);
 
                 // Update progress counter
@@ -327,7 +323,6 @@ class ResearchScene extends Phaser.Scene {
                 // Check if all explored
                 var allDone = count === 4;
                 if (allDone) {
-                    // Show completion message
                     if (self.layerProgressText) self.layerProgressText.setVisible(false);
                     if (self.layerCompleteMsg) {
                         self.layerCompleteMsg.setText(t('res_layers_complete') || '✓ Stage 1 complete — click Dynamo to continue');
@@ -590,7 +585,11 @@ class ResearchScene extends Phaser.Scene {
 
         // Draggable handle
         var handle = this.add.circle(trackLeft, trackY - 6, 8, 0xffec27)
-            .setInteractive({ useHandCursor: true, draggable: true }).setDepth(13);
+            .setInteractive({
+                useHandCursor: true, draggable: true,
+                hitArea: new Phaser.Geom.Circle(0, 0, 22),
+                hitAreaCallback: Phaser.Geom.Circle.Contains
+            }).setDepth(13);
         this.stationGroup.push(handle);
         this.input.setDraggable(handle);
 
@@ -919,7 +918,7 @@ class ResearchScene extends Phaser.Scene {
             align: 'center', rtl: this.isRTL
         }).setOrigin(0.5).setDepth(21);
 
-        var zone = this.add.zone(cx, cy, bw, bh)
+        var zone = this.add.zone(cx, cy, Math.max(bw, 44), Math.max(bh, 44))
             .setInteractive({ useHandCursor: true }).setDepth(22);
 
         zone.on('pointerover', function() {
@@ -1036,8 +1035,10 @@ class ResearchScene extends Phaser.Scene {
     createBackButton() {
         var self = this;
         var t = this.t;
-        var btn = this.add.image(50, this.H - 25, 'btn_small')
-            .setInteractive({ useHandCursor: true }).setScale(0.7).setDepth(40);
+        var btn = this.add.zone(50, this.H - 25, 80, 44)
+            .setInteractive({ useHandCursor: true }).setDepth(41);
+        this.add.image(50, this.H - 25, 'btn_small')
+            .setScale(0.7).setDepth(40);
         this.add.text(50, this.H - 25, '\u2190 ' + (t('back_btn') || 'Back'), {
             fontFamily: this.fontFamily + ', monospace', fontSize: '13px', color: '#aaaacc', rtl: this.isRTL
         }).setOrigin(0.5).setDepth(40);

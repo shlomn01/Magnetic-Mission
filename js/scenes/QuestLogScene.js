@@ -123,7 +123,7 @@ class QuestLogScene extends Phaser.Scene {
             color: '#ff6666'
         }).setOrigin(0.5).setDepth(4);
 
-        const closeZone = this.add.zone(closeX, closeY, 30, 30)
+        const closeZone = this.add.zone(closeX, closeY, 44, 44)
             .setInteractive({ useHandCursor: true })
             .setDepth(5);
 
@@ -286,7 +286,7 @@ class QuestLogScene extends Phaser.Scene {
                 color: isActive ? '#00ddff' : '#556677'
             }).setOrigin(0.5).setDepth(4);
 
-            const tabZone = this.add.zone(tabX + tabW / 2, tabY + tabH / 2, tabW, tabH)
+            const tabZone = this.add.zone(tabX + tabW / 2, tabY + tabH / 2, tabW, Math.max(tabH, 44))
                 .setInteractive({ useHandCursor: true })
                 .setDepth(5);
 

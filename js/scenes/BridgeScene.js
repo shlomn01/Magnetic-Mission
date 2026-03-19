@@ -337,7 +337,11 @@ class BridgeScene extends Phaser.Scene {
         }
 
         var thumb = this.add.circle(sliderLeft + ((bhVal - 10) / 40) * sliderW, sliderY, 8, C.CYAN)
-            .setInteractive({ useHandCursor: true, draggable: true }).setDepth(12);
+            .setInteractive({
+                useHandCursor: true, draggable: true,
+                hitArea: new Phaser.Geom.Circle(0, 0, 22),
+                hitAreaCallback: Phaser.Geom.Circle.Contains
+            }).setDepth(12);
         this.interactionGroup.push(thumb);
         this.input.setDraggable(thumb);
 
@@ -837,7 +841,7 @@ class BridgeScene extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(12);
         this.interactionGroup.push(lbl);
 
-        var zone = this.add.zone(cx, cy, bw, bh)
+        var zone = this.add.zone(cx, cy, Math.max(bw, 44), Math.max(bh, 44))
             .setInteractive({ useHandCursor: true }).setDepth(13);
         this.interactionGroup.push(zone);
 
@@ -866,8 +870,10 @@ class BridgeScene extends Phaser.Scene {
     createBackButton() {
         var self = this;
         var t = this.t;
-        var btn = this.add.image(50, this.H - 25, 'btn_small')
-            .setInteractive({ useHandCursor: true }).setScale(0.7).setDepth(40);
+        var btn = this.add.zone(50, this.H - 25, 80, 44)
+            .setInteractive({ useHandCursor: true }).setDepth(41);
+        this.add.image(50, this.H - 25, 'btn_small')
+            .setScale(0.7).setDepth(40);
         this.add.text(50, this.H - 25, '\u2190 ' + (t('back_btn') || 'Back'), {
             fontFamily: this.fontFamily + ', monospace', fontSize: '13px', color: '#aaaacc', rtl: this.isRTL
         }).setOrigin(0.5).setDepth(40);

@@ -643,18 +643,21 @@ class LabScene extends Phaser.Scene {
     createHUD() {
         const w = this.W;
         const backX = this.isRTL ? w - 40 : 40;
-        const backBtn = this.add.image(backX, 28, 'btn')
+        const backImg = this.add.image(backX, 28, 'btn')
             .setScale(1.5, 1.5)
-            .setDepth(this.DEPTH.UI)
-            .setInteractive({ useHandCursor: true });
+            .setDepth(this.DEPTH.UI);
 
         const backIcon = this.add.image(backX, 28, 'icon_back')
             .setScale(2)
             .setDepth(this.DEPTH.UI + 1)
             .setFlipX(this.isRTL);
 
-        backBtn.on('pointerover', () => backBtn.setTexture('btn_hover'));
-        backBtn.on('pointerout', () => backBtn.setTexture('btn'));
+        const backBtn = this.add.zone(backX, 28, 72, 44)
+            .setInteractive({ useHandCursor: true })
+            .setDepth(this.DEPTH.UI + 2);
+
+        backBtn.on('pointerover', () => backImg.setTexture('btn_hover'));
+        backBtn.on('pointerout', () => backImg.setTexture('btn'));
         backBtn.on('pointerdown', () => {
             if (window.AudioManager) window.AudioManager.playSFX('click');
             this.scene.start('ShipHub');
@@ -1976,14 +1979,17 @@ class LabScene extends Phaser.Scene {
         // Close button (X) top-right
         const closeBtn = this.add.text(gx + gw - 14, gy + 10, 'X', {
             fontFamily: this.pixelFont, fontSize: '10px', color: '#ff004d'
-        }).setOrigin(0.5).setDepth(this.DEPTH.OVERLAY + 2)
-          .setInteractive({ useHandCursor: true });
-        closeBtn.on('pointerdown', () => {
+        }).setOrigin(0.5).setDepth(this.DEPTH.OVERLAY + 2);
+        const closeBtnZone = this.add.zone(gx + gw - 14, gy + 10, 44, 44)
+            .setInteractive({ useHandCursor: true })
+            .setDepth(this.DEPTH.OVERLAY + 3);
+        closeBtnZone.on('pointerdown', () => {
             this.graphGroup.setVisible(false);
         });
-        closeBtn.on('pointerover', () => { closeBtn.setColor('#fff1e8'); });
-        closeBtn.on('pointerout', () => { closeBtn.setColor('#ff004d'); });
+        closeBtnZone.on('pointerover', () => { closeBtn.setColor('#fff1e8'); });
+        closeBtnZone.on('pointerout', () => { closeBtn.setColor('#ff004d'); });
         this.graphGroup.add(closeBtn);
+        this.graphGroup.add(closeBtnZone);
 
         // Axes
         const axisG = this.add.graphics().setDepth(this.DEPTH.OVERLAY);

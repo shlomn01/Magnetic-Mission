@@ -147,14 +147,14 @@ class NavigationScene extends Phaser.Scene {
             rtl: this.isRTL
         }).setOrigin(0.5).setDepth(11);
 
-        // Label below panel
+        // Label below panel (compass: above instrument to avoid button overlap)
         var labels = {
             dial: this.t('nav_panel_calibration') || 'CALIBRATION',
             signal: this.t('nav_panel_signal') || 'SIGNAL',
             compass: this.t('nav_panel_compass') || 'COMPASS'
         };
         // Dark backing for label
-        var labelY = top + ph - 14;
+        var labelY = (name === 'compass') ? top + 28 : top + ph - 14;
         g.fillStyle(C.DEEP_NAVY, 0.9);
         g.fillRoundedRect(cx - 50, labelY - 8, 100, 16, 3);
         this.add.text(cx, labelY, labels[name], {
@@ -251,7 +251,7 @@ class NavigationScene extends Phaser.Scene {
             repeat: -1
         });
 
-        var zone = this.add.zone(cx, cy, width, height)
+        var zone = this.add.zone(cx, cy, Math.max(width, 44), Math.max(height, 44))
             .setInteractive({ useHandCursor: true }).setDepth(22);
 
         zone.on('pointerover', function() { drawHover(); });
@@ -549,8 +549,8 @@ class NavigationScene extends Phaser.Scene {
         this.compassParams = { cx: cx, cy: cy, r: r };
         this.drawCompass(0);
 
-        // STABILIZE button
-        var btnY = cy + r + 14;
+        // STABILIZE button (moved up to avoid clipping panel bottom)
+        var btnY = cy + r;
         this.stabilizeBtn = this.createButton(cx, btnY, this.t('nav_stabilize_btn') || 'HOLD TO STABILIZE', 140, 22, null);
 
         // Progress bar behind button
@@ -833,8 +833,10 @@ class NavigationScene extends Phaser.Scene {
     createBackButton(fontFamily) {
         var t = this.t;
         var self = this;
-        var btn = this.add.image(50, this.H - 30, 'btn_small')
+        var btn = this.add.zone(50, this.H - 30, 80, 44)
             .setInteractive({ useHandCursor: true })
+            .setDepth(41);
+        this.add.image(50, this.H - 30, 'btn_small')
             .setScale(0.7).setDepth(40);
         this.add.text(50, this.H - 30, '\u2190 ' + (t('back_btn') || 'Back'), {
             fontFamily: fontFamily + ', monospace',

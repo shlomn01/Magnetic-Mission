@@ -67,6 +67,19 @@ class BootScene extends Phaser.Scene {
 
     create() {
         this.generateAllTextures();
+
+        // On mobile: request landscape + fullscreen on first tap
+        if (this.sys.game.device.os.android || this.sys.game.device.os.iOS) {
+            this.input.once('pointerdown', () => {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(() => {});
+                }
+                if (this.scale.isFullscreen === false) {
+                    this.scale.startFullscreen();
+                }
+            });
+        }
+
         this.scene.start('Title');
     }
 

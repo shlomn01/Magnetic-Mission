@@ -241,21 +241,26 @@ class TitleScene extends Phaser.Scene {
             { code: 'he', label: '\u05E2\u05D1' },
             { code: 'ar', label: '\u0639\u0631' }
         ];
-        var lx0 = w - 160;
+        // On small screens, center buttons for easier tapping
+        var isMobile = window.innerWidth < 600;
+        var langSpacing = isMobile ? 70 : 50;
+        var lx0 = isMobile ? w / 2 - langSpacing : w - 160;
+        var ly = isMobile ? 18 : 22;
+        var langFontSize = isMobile ? '14px' : '10px';
+        var langPadding = isMobile ? { x: 18, y: 16 } : { x: 14, y: 14 };
         for (var li = 0; li < langs.length; li++) {
             (function (lang, idx) {
-                var lx = lx0 + idx * 50;
-                var ly = 22;
+                var lx = lx0 + idx * langSpacing;
                 var active = window.I18N && window.I18N.currentLang === lang.code;
                 var btn = self.add.text(lx, ly, lang.label, {
                     fontFamily: 'Press Start 2P, monospace',
-                    fontSize: '10px',
+                    fontSize: langFontSize,
                     color: active ? '#29adff' : '#5f574f',
                     backgroundColor: '#0d1b2a',
-                    padding: { x: 6, y: 4 }
+                    padding: langPadding
                 }).setOrigin(0.5).setDepth(20).setInteractive({ useHandCursor: true });
                 if (active) {
-                    self.add.rectangle(lx, ly + 14, 36, 2, 0x29adff).setDepth(20);
+                    self.add.rectangle(lx, ly + (isMobile ? 18 : 14), isMobile ? 44 : 36, 2, 0x29adff).setDepth(20);
                 }
                 btn.on('pointerover', function () { btn.setColor('#fff1e8'); });
                 btn.on('pointerout', function () {
