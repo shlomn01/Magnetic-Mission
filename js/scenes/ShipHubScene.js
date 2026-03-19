@@ -100,8 +100,6 @@ class ShipHubScene extends Phaser.Scene {
         rooms.forEach((room, i) => {
             room.available = act >= room.unlockAct;
             room.x = doorSpacing * (i + 1);
-            // Nudge last door left so it doesn't clip the right edge
-            if (i === rooms.length - 1) room.x -= 70;
             this.createDoor(room, i);
         });
 
@@ -1078,7 +1076,7 @@ class ShipHubScene extends Phaser.Scene {
             rtl: isRTL
         }).setOrigin(0.5).setDepth(53);
 
-        const btnZone = this.add.zone(btnX, btnY, btnW, Math.max(btnH, 44))
+        const btnZone = this.add.zone(btnX, btnY, btnW, btnH)
             .setInteractive({ useHandCursor: true }).setDepth(54);
 
         btnZone.on('pointerover', () => {
