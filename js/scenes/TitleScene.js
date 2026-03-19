@@ -15,6 +15,14 @@ class TitleScene extends Phaser.Scene {
         var fontFamily = window.I18N ? window.I18N.getFontFamily() : 'Press Start 2P';
         var self = this;
 
+        // Mobile fullscreen prompt — show overlay before title content
+        var isMobile = this.sys.game.device.os.android || this.sys.game.device.os.iOS;
+        if (isMobile && !this._mobilePromptShown) {
+            this._mobilePromptShown = true;
+            this._showMobilePrompt(w, h, fontFamily);
+            return; // don't build title screen yet
+        }
+
         // Try to play menu music
         try {
             if (window.AudioManager && window.AudioManager.initialized) {
@@ -292,6 +300,80 @@ class TitleScene extends Phaser.Scene {
 
         // Fade in
         this.cameras.main.fadeIn(800, 0, 0, 0);
+    }
+
+    _showMobilePrompt(w, h, fontFamily) {
+        var self = this;
+
+        // Full-screen dark overlay
+        var bg = this.add.rectangle(w / 2, h / 2, w, h, 0x0d1b2a).setDepth(100);
+
+        // Prompt text
+        var promptStr = (window.I18N ? window.I18N.t('press_to_start') : 'Tap to Start');
+        if (window.I18N && window.I18N.isRTL()) promptStr = window.I18N.fixRTL(promptStr);
+        var promptText = this.add.text(w / 2, h / 2 - 30, promptStr, {
+            fontFamily: fontFamily + ', monospace',
+            fontSize: '18px',
+            color: '#fff1e8',
+            align: 'center',
+            rtl: window.I18N && window.I18N.isRTL()
+        }).setOrigin(0.5).setDepth(101);
+
+        // Simple hand/tap icon drawn with graphics
+        var handGfx = this.add.graphics().setDepth(101);
+        var hx = w / 2, hy = h / 2 + 40;
+        // Palm
+        handGfx.fillStyle(0xfff1e8, 0.8);
+        handGfx.fillRoundedRect(hx - 10, hy, 20, 24, 4);
+        // Finger
+        handGfx.fillRoundedRect(hx - 4, hy - 16, 8, 20, 3);
+        // Tap rings
+        handGfx.lineStyle(2, 0x53d8fb, 0.4);
+        handGfx.strokeCircle(hx, hy + 8, 24);
+        handGfx.lineStyle(1, 0x53d8fb, 0.2);
+        handGfx.strokeCircle(hx, hy + 8, 36);
+
+        // Pulse animation on tap rings
+        this.tweens.add({
+            targets: handGfx,
+            alpha: { from: 1, to: 0.4 },
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        // Touch zone covers full screen
+        var touchZone = this.add.zone(w / 2, h / 2, w, h)
+            .setInteractive({ useHandCursor: true }).setDepth(102);
+
+        touchZone.on('pointerdown', function() {
+            // Request fullscreen
+            if (self.scale.isFullscreen === false) {
+                self.scale.startFullscreen();
+            }
+            // Lock landscape
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(function() {});
+            }
+            // Initialize audio on user gesture
+            if (window.AudioManager) window.AudioManager.init();
+
+            // Fade out overlay then rebuild scene
+            self.tweens.add({
+                targets: [bg, promptText, handGfx],
+                alpha: 0,
+                duration: 400,
+                onComplete: function() {
+                    bg.destroy();
+                    promptText.destroy();
+                    handGfx.destroy();
+                    touchZone.destroy();
+                    // Now run the full create() again (prompt flag prevents loop)
+                    self.create();
+                }
+            });
+        });
     }
 
     update(time, delta) {
